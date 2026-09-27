@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next"; export default function manifest():MetadataRoute.Manifest{return{name:"HomeLedger",short_name:"HomeLedger",description:"Private shared household finance",start_url:"/dashboard",display:"standalone",background_color:"#f6f7fb",theme_color:"#5b5bf7",icons:[]}}

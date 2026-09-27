@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server"; import {requireMember} from "@/lib/auth"; import {prisma} from "@/lib/prisma"; export async function GET(){const m=await requireMember();const logs=await prisma.auditLog.findMany({where:{householdId:m.householdId},include:{member:{select:{name:true}}},orderBy:{createdAt:"desc"},take:100});return NextResponse.json({logs})}

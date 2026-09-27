@@ -1,0 +1,2 @@
+"use client"; import {useRouter} from "next/navigation";
+export default function Header({name,household}:{name:string;household:string}){const r=useRouter();async function logout(){await fetch("/api/auth/logout",{method:"POST"});r.push("/login");r.refresh()}return <header className="topbar"><div className="brand">Home<b>Ledger</b></div><div className="top-actions"><span className="muted household-name">{household}</span><div className="avatar">{name.slice(0,1).toUpperCase()}</div><button className="btn" onClick={logout}>Logout</button></div></header>}

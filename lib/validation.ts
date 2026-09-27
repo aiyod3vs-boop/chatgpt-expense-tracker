@@ -1,0 +1,3 @@
+import { z } from "zod";
+export const expenseSchema=z.object({id:z.string().optional(),amount:z.coerce.number().positive().max(999999999),categoryId:z.string().min(1),memberId:z.string().min(1),paymentMethod:z.enum(["CASH","UPI","CARD","BANK","WALLET","OTHER"]),date:z.string().min(1),note:z.string().max(500).optional(),receiptUrl:z.string().url().optional().or(z.literal(""))});
+export const incomeSchema=z.object({id:z.string().optional(),amount:z.coerce.number().positive().max(999999999),source:z.string().min(1).max(120),memberId:z.string().min(1),date:z.string().min(1),note:z.string().max(500).optional()});

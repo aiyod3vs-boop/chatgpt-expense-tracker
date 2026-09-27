@@ -1,0 +1,172 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum MemberRole { HUSBAND WIFE OTHER }
+enum PaymentMethod { CASH UPI CARD BANK WALLET OTHER }
+enum RecurringFrequency { DAILY WEEKLY MONTHLY YEARLY }
+enum GoalStatus { ACTIVE COMPLETED PAUSED }
+
+
+model Household {
+  id String @id @default(cuid())
+  name String
+  currency String @default("INR")
+  createdAt DateTime @default(now())
+  members Member[]
+  categories Category[]
+  expenses Expense[]
+  incomes Income[]
+  budgets Budget[]
+  recurring RecurringExpense[]
+  invitations HouseholdInvite[]
+  goals Goal[]
+  auditLogs AuditLog[]
+}
+
+model Member {
+  id String @id @default(cuid())
+  householdId String
+  name String
+  email String @unique
+  passwordHash String
+  role MemberRole @default(OTHER)
+  createdAt DateTime @default(now())
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  expenses Expense[]
+  incomes Income[]
+  sessions Session[]
+  auditLogs AuditLog[]
+}
+
+model Category {
+  id String @id @default(cuid())
+  householdId String
+  name String
+  icon String?
+  color String?
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  expenses Expense[]
+  budgets Budget[]
+  recurring RecurringExpense[]
+  @@unique([householdId,name])
+}
+
+model Expense {
+  id String @id @default(cuid())
+  householdId String
+  memberId String
+  categoryId String
+  amount Decimal @db.Decimal(12,2)
+  date DateTime
+  paymentMethod PaymentMethod @default(UPI)
+  note String?
+  receiptUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  member Member @relation(fields:[memberId],references:[id],onDelete:Cascade)
+  category Category @relation(fields:[categoryId],references:[id],onDelete:Cascade)
+  @@index([householdId,date])
+  @@index([householdId,categoryId,date])
+}
+
+model Income {
+  id String @id @default(cuid())
+  householdId String
+  memberId String
+  source String
+  amount Decimal @db.Decimal(12,2)
+  date DateTime
+  note String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  member Member @relation(fields:[memberId],references:[id],onDelete:Cascade)
+  @@index([householdId,date])
+}
+
+model Budget {
+  id String @id @default(cuid())
+  householdId String
+  categoryId String
+  month Int
+  year Int
+  amount Decimal @db.Decimal(12,2)
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  category Category @relation(fields:[categoryId],references:[id],onDelete:Cascade)
+  @@unique([householdId,categoryId,month,year])
+}
+
+model RecurringExpense {
+  id String @id @default(cuid())
+  householdId String
+  categoryId String
+  title String
+  amount Decimal @db.Decimal(12,2)
+  frequency RecurringFrequency
+  nextDate DateTime
+  paymentMethod PaymentMethod @default(UPI)
+  active Boolean @default(true)
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  category Category @relation(fields:[categoryId],references:[id],onDelete:Cascade)
+}
+
+model Goal {
+  id String @id @default(cuid())
+  householdId String
+  title String
+  targetAmount Decimal @db.Decimal(12,2)
+  savedAmount Decimal @db.Decimal(12,2) @default(0)
+  targetDate DateTime?
+  status GoalStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  @@index([householdId,status])
+}
+
+model HouseholdInvite {
+  id String @id @default(cuid())
+  householdId String
+  email String
+  role MemberRole @default(OTHER)
+  tokenHash String @unique
+  expiresAt DateTime
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id String @id @default(cuid())
+  memberId String
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  id String @id @default(cuid())
+  memberId String
+  tokenHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  member Member @relation(fields:[memberId],references:[id],onDelete:Cascade)
+  @@index([memberId,expiresAt])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+  householdId String
+  memberId String?
+  action String
+  entity String
+  entityId String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  household Household @relation(fields:[householdId],references:[id],onDelete:Cascade)
+  member Member? @relation(fields:[memberId],references:[id],onDelete:SetNull)
+  @@index([householdId,createdAt])
+}

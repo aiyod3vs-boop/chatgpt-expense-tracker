@@ -1,0 +1,1 @@
+import {redirect} from "next/navigation";import {getCurrentMember} from "@/lib/auth";export default async function Home(){redirect((await getCurrentMember())?"/dashboard":"/login")}
